@@ -2409,14 +2409,14 @@
         onchange="updateCostName(${i}, this.value)">
       <input type="number" value="${c.amount}" min="0" step="100"
         onchange="fixedCosts[${i}].amount=+this.value||0; updatePlanner()">
-      <span class="cost-pct">${pctOf(c.amount, gross)}%</span>
+       <span class="cost-pct">${pctOf(c.amount, state.takeHome || gross)}%</span>
       <button class="del-btn" onclick="removeCost(${i})" title="Remove">✕</button>
     </div>`,
           )
           .join("");
 
         // update total row
-        const fixedPct = pctOf(total, gross);
+        const fixedPct = pctOf(total, state.takeHome || gross);
         document.getElementById("fixedCostTotal").innerHTML =
           `${fmt(total)} ${currentLang === "th" ? "บาท" : "THB"} <span class="pct-pill fixed">${fixedPct}%</span>`;
       }
@@ -2611,11 +2611,11 @@
           bdBuf.className = buffer < 0 ? "neg" : "pos";
         }
 
-        // Pills
+        // Pills (all % relative to take-home)
         function setPill(id, val, cls) {
           const el = document.getElementById(id);
           if (!el) return;
-          el.textContent = pctOf(val, gross) + "%";
+          el.textContent = pctOf(val, takeHome) + "%";
           el.className = "pct-pill " + cls;
         }
         setPill("pct-living", Math.round(living - commute), "low");
@@ -2625,7 +2625,7 @@
         setPill("pct-dca", dca, "high");
         const bufPillEl = document.getElementById("pct-buf");
         if (bufPillEl) {
-          bufPillEl.textContent = pctOf(Math.max(0, buffer), gross) + "%";
+          bufPillEl.textContent = pctOf(Math.max(0, buffer), takeHome) + "%";
           bufPillEl.className = "pct-pill" + (buffer < 0 ? " danger" : "");
         }
 
@@ -2779,50 +2779,50 @@
           "-" +
           thb(Math.round(monthlyLiving)) +
           ' <span class="pct-pill low">' +
-          pctOf(Math.round(monthlyLiving), gross) +
-          "%</span>";
-        document.getElementById("rb-commute").innerHTML =
-          "-" +
-          thb(commute) +
-          ' <span class="pct-pill low">' +
-          pctOf(commute, gross) +
-          "%</span>";
-        document.getElementById("rb-family").innerHTML =
-          "-" +
-          thb(family) +
-          ' <span class="pct-pill fam">' +
-          pctOf(family, gross) +
-          "%</span>";
+           pctOf(Math.round(monthlyLiving), takeHome) +
+           "%</span>";
+         document.getElementById("rb-commute").innerHTML =
+           "-" +
+           thb(commute) +
+           ' <span class="pct-pill low">' +
+           pctOf(commute, takeHome) +
+           "%</span>";
+         document.getElementById("rb-family").innerHTML =
+           "-" +
+           thb(family) +
+           ' <span class="pct-pill fam">' +
+           pctOf(family, takeHome) +
+           "%</span>";
 
-        // Fixed cost rows
-        const fixedRows = fixedCosts
-          .map((c) => {
-            const name =
-              currentLang === "th" ? c.name_th || c.name : c.name || c.name_th;
-            return `<div class="phase-item"><span class="item-label" style="color:#fb923c;">— ${name || "—"}</span><span class="item-value" style="color:#fb923c;">-${thb(c.amount)} <span class="pct-pill fixed">${pctOf(c.amount, gross)}%</span></span></div>`;
-          })
-          .join("");
-        document.getElementById("rb-fixed-rows").innerHTML = fixedRows;
+         // Fixed cost rows
+         const fixedRows = fixedCosts
+           .map((c) => {
+             const name =
+               currentLang === "th" ? c.name_th || c.name : c.name || c.name_th;
+             return `<div class="phase-item"><span class="item-label" style="color:#fb923c;">— ${name || "—"}</span><span class="item-value" style="color:#fb923c;">-${thb(c.amount)} <span class="pct-pill fixed">${pctOf(c.amount, takeHome)}%</span></span></div>`;
+           })
+           .join("");
+         document.getElementById("rb-fixed-rows").innerHTML = fixedRows;
 
-        document.getElementById("rb-personal").innerHTML =
-          "-" +
-          thb(personal) +
-          ' <span class="pct-pill mid">' +
-          pctOf(personal, gross) +
-          "%</span>";
-        document.getElementById("rb-dca").innerHTML =
-          "-" +
-          thb(dca) +
-          ' <span class="pct-pill high">' +
-          pctOf(dca, gross) +
-          "%</span>";
+         document.getElementById("rb-personal").innerHTML =
+           "-" +
+           thb(personal) +
+           ' <span class="pct-pill mid">' +
+           pctOf(personal, takeHome) +
+           "%</span>";
+         document.getElementById("rb-dca").innerHTML =
+           "-" +
+           thb(dca) +
+           ' <span class="pct-pill high">' +
+           pctOf(dca, takeHome) +
+           "%</span>";
         const bufVal = Math.max(0, buffer);
         document.getElementById("rb-buf").innerHTML =
           thb(bufVal) +
           ' <span class="pct-pill' +
           (buffer < 0 ? " danger" : "") +
           '" id="rpct-buf">' +
-          pctOf(bufVal, gross) +
+           pctOf(bufVal, takeHome) +
           "%</span>";
         document.getElementById("rb-buf").style.color =
           buffer < 0 ? "#f87171" : "#34d399";
