@@ -2476,6 +2476,7 @@
         data: {
           labels: [
             "PVD",
+            "SSO",
             "DCA",
             "Living+Commute",
             "Family",
@@ -2485,9 +2486,10 @@
           ],
           datasets: [
             {
-              data: [8475, 12000, 6833, 7500, 500, 10000, 2692],
+              data: [8475, 750, 12000, 6833, 7500, 500, 10000, 2692],
               backgroundColor: [
                 "#818cf8",
+                "#a78bfa",
                 "#34d399",
                 "#fbbf24",
                 "#f472b6",
@@ -2665,6 +2667,7 @@
 
         allocChart.data.datasets[0].data = [
           Math.round(pvdAmt),
+          ssoAmt,
           dca,
           Math.round(living),
           Math.round(family),
