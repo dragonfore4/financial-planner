@@ -1142,6 +1142,10 @@
             <span class="value negative" id="pvdDeductDisplay">-8,475 THB</span>
           </div>
           <div class="breakdown-row">
+            <span class="label" data-en="SSO (5%, cap 750)" data-th="ประกันสังคม (5%, สูงสุด 750)">SSO (5%, cap 750)</span>
+            <span class="value negative" id="ssoDeductDisplay">-750 THB</span>
+          </div>
+          <div class="breakdown-row">
             <span
               class="label"
               style="font-weight: 600; color: #f8fafc"
@@ -1149,7 +1153,7 @@
               data-th="เงินเดือนสุทธิ"
               >Take-Home</span
             >
-            <span class="value highlight" id="takeHomeDisplay">48,025 THB</span>
+            <span class="value highlight" id="takeHomeDisplay">47,275 THB</span>
           </div>
         </div>
 
@@ -2568,6 +2572,8 @@
           "= " + fmt(pvdAmt) + " THB";
         document.getElementById("pvdDeductDisplay").textContent =
           "-" + fmt(pvdAmt) + " THB";
+        document.getElementById("ssoDeductDisplay").textContent =
+          "-" + fmt(ssoAmt) + " THB";
         document.getElementById("takeHomeDisplay").textContent =
           fmt(takeHome) + " THB";
 
