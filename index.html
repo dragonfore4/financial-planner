@@ -881,6 +881,57 @@
         background: #f87171;
       }
 
+      /* ── Buffer breakdown tooltip ── */
+      .buf-breakdown-wrap {
+        position: relative;
+        display: inline-block;
+      }
+      .buf-breakdown-tip {
+        display: none;
+        position: absolute;
+        bottom: calc(100% + 8px);
+        left: 50%;
+        transform: translateX(-50%);
+        background: #1e2130;
+        border: 1px solid #334155;
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        min-width: 220px;
+        z-index: 999;
+        box-shadow: 0 8px 24px rgba(0,0,0,.45);
+        pointer-events: none;
+      }
+      .buf-breakdown-tip::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 6px solid transparent;
+        border-top-color: #334155;
+      }
+      .buf-breakdown-wrap:hover .buf-breakdown-tip,
+      .buf-breakdown-wrap.tip-open .buf-breakdown-tip {
+        display: block;
+      }
+      .buf-breakdown-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 1.5rem;
+        font-size: 0.78rem;
+        line-height: 1.8;
+        color: #94a3b8;
+      }
+      .buf-breakdown-row.total {
+        border-top: 1px solid #334155;
+        margin-top: 0.35rem;
+        padding-top: 0.35rem;
+        color: #e2e8f0;
+        font-weight: 600;
+      }
+      .buf-breakdown-row .neg { color: #f87171; }
+      .buf-breakdown-row .pos { color: #34d399; }
+
       /* ── Print styles ── */
       @media print {
         .top-bar,
@@ -1245,7 +1296,43 @@
                   data-th="เงินสำรองรายเดือน"
                   >Monthly buffer / spare</span
                 >
-                <span id="bufLabelVal" style="color: #34d399">11,192</span>
+                <span class="buf-breakdown-wrap" id="bufBreakdownWrap">
+                  <span id="bufLabelVal" style="color: #34d399; cursor: pointer;">11,192</span>
+                  <div class="buf-breakdown-tip" id="bufBreakdownTip">
+                    <div class="buf-breakdown-row">
+                      <span data-en="Take-Home" data-th="เงินเดือนสุทธิ">Take-Home</span>
+                      <span id="bd-takehome" class="pos">48,025</span>
+                    </div>
+                    <div class="buf-breakdown-row">
+                      <span data-en="− Living" data-th="− ค่าครองชีพ">− Living</span>
+                      <span id="bd-living" class="neg">−4,333</span>
+                    </div>
+                    <div class="buf-breakdown-row">
+                      <span data-en="− Commute" data-th="− ค่าเดินทาง">− Commute</span>
+                      <span id="bd-commute" class="neg">−2,500</span>
+                    </div>
+                    <div class="buf-breakdown-row">
+                      <span data-en="− Family" data-th="− ช่วยครอบครัว">− Family</span>
+                      <span id="bd-family" class="neg">−7,500</span>
+                    </div>
+                    <div class="buf-breakdown-row">
+                      <span data-en="− Fixed costs" data-th="− ค่าใช้จ่ายประจำ">− Fixed costs</span>
+                      <span id="bd-fixed" class="neg">−500</span>
+                    </div>
+                    <div class="buf-breakdown-row">
+                      <span data-en="− Personal" data-th="− เงินส่วนตัว">− Personal</span>
+                      <span id="bd-personal" class="neg">−10,000</span>
+                    </div>
+                    <div class="buf-breakdown-row">
+                      <span data-en="− DCA" data-th="− ลงทุน DCA">− DCA</span>
+                      <span id="bd-dca" class="neg">−12,000</span>
+                    </div>
+                    <div class="buf-breakdown-row total">
+                      <span data-en="= Buffer" data-th="= สำรอง">= Buffer</span>
+                      <span id="bd-buffer" class="pos">11,192</span>
+                    </div>
+                  </div>
+                </span>
                 <span data-en="THB" data-th="บาท">THB</span
                 ><span class="pct-pill" id="pct-buf">20%</span></label
               >
@@ -2500,6 +2587,30 @@
         document.getElementById("bufLabelVal").style.color =
           buffer < 0 ? "#f87171" : "#34d399";
 
+        // Buffer breakdown tooltip values
+        function setbd(id, val, negate) {
+          const el = document.getElementById(id);
+          if (!el) return;
+          if (negate) {
+            el.textContent = val === 0 ? "0" : "−" + fmt(val);
+            el.className = val === 0 ? "" : "neg";
+          } else {
+            el.textContent = fmt(val);
+          }
+        }
+        setbd("bd-takehome", takeHome, false);
+        setbd("bd-living",   living,   true);
+        setbd("bd-commute",  commute,  true);
+        setbd("bd-family",   family,   true);
+        setbd("bd-fixed",    fixedTotal, true);
+        setbd("bd-personal", personal, true);
+        setbd("bd-dca",      dca,      true);
+        const bdBuf = document.getElementById("bd-buffer");
+        if (bdBuf) {
+          bdBuf.textContent = fmt(buffer);
+          bdBuf.className = buffer < 0 ? "neg" : "pos";
+        }
+
         // Pills
         function setPill(id, val, cls) {
           const el = document.getElementById(id);
@@ -3150,6 +3261,17 @@
         toastTimer = setTimeout(() => {
           t.className = "";
         }, 2800);
+      }
+      // Buffer breakdown: tap to toggle on touch devices
+      const bufWrap = document.getElementById("bufBreakdownWrap");
+      if (bufWrap) {
+        bufWrap.addEventListener("click", function (e) {
+          this.classList.toggle("tip-open");
+          e.stopPropagation();
+        });
+        document.addEventListener("click", function () {
+          bufWrap.classList.remove("tip-open");
+        });
       }
     </script>
   </body>
