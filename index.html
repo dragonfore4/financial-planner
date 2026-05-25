@@ -2532,7 +2532,8 @@
         const gross = Math.max(10000, +grossInput.value || 0);
         const pvdPct = +pvdPctSlider.value;
         const pvdAmt = (gross * pvdPct) / 100;
-        const takeHome = gross - pvdAmt;
+        const ssoAmt = Math.min(Math.round(gross * 0.05), 750);
+        const takeHome = gross - pvdAmt - ssoAmt;
         const weekly = +S.weekly.value;
         const commute = +S.commute.value;
         const family = +S.family.value;
@@ -2546,6 +2547,7 @@
           gross,
           pvdPct,
           pvdAmt,
+          ssoAmt,
           takeHome,
           weekly,
           commute,
