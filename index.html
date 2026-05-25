@@ -1622,6 +1622,12 @@
                 >-8,475 THB</span
               >
             </div>
+            <div class="phase-item">
+              <span class="item-label" data-en="SSO (5%, cap 750)" data-th="ประกันสังคม (5%, สูงสุด 750)">SSO (5%, cap 750)</span>
+              <span class="item-value" style="color: #f87171" id="rb-sso"
+                >-750 THB</span
+              >
+            </div>
             <div class="phase-item" style="border: 1px solid #60a5fa">
               <span
                 class="item-label"
@@ -2781,6 +2787,7 @@
         document.getElementById("rb-pvd-label").textContent =
           `PVD (${pvdPct}%)`;
         document.getElementById("rb-pvd").textContent = "-" + thb(pvdAmt);
+        document.getElementById("rb-sso").textContent = "-" + thb(ssoAmt);
         document.getElementById("rb-takehome").textContent = thb(takeHome);
         document.getElementById("rb-living-label").textContent =
           currentLang === "th"
