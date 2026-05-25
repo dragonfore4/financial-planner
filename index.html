@@ -2644,11 +2644,11 @@
         );
         document.getElementById("bufDisplay").style.color =
           buffer < 0 ? "#f87171" : "#60a5fa";
-        document.getElementById("bufNote").textContent =
-          fmt(personal) +
-          (currentLang === "th" ? " ส่วนตัว · " : " personal · ") +
-          fmt(Math.max(0, buffer)) +
-          (currentLang === "th" ? " สำรอง" : " buffer");
+         const totalFree = personal + Math.max(0, buffer);
+         document.getElementById("bufNote").textContent =
+           currentLang === "th"
+             ? "ส่วนตัว " + fmt(personal) + " · สำรอง " + fmt(Math.max(0, buffer)) + " · รวม " + fmt(totalFree)
+             : "personal " + fmt(personal) + " · spare " + fmt(Math.max(0, buffer)) + " · total free " + fmt(totalFree);
 
         const warn = document.getElementById("warningBox");
         warn.style.display = buffer < 0 ? "block" : "none";
