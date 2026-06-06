@@ -23,7 +23,7 @@ No `npm`, `node`, `pytest`, `make`, `lint`, `typecheck`, or CI. There is nothing
 
 ## Key JS architecture
 
-- `state = {}` — global object updated on every input change; holds `gross, pvdAmt, takeHome, weekly, commute, family, personal, dca, living, fixedTotal, buffer`
+- `state = {}` — global object updated on every input change; holds `gross, pvdPct, pvdAmt, ssoAmt, deductTotal, takeHome, weekly, commute, family, personal, dca, living, fixedTotal, buffer`
 - `updatePlanner()` — main recalculation function, called on every slider/input event and on language switch
 - `updateRecommendation()` — called from `updatePlanner()` only when recommendation tab is active
 - `currentLang` — global `"en"` or `"th"`, switched by `setLang()`
@@ -33,10 +33,13 @@ No `npm`, `node`, `pytest`, `make`, `lint`, `typecheck`, or CI. There is nothing
 
 ## Critical calculation facts
 
-- `takeHome = gross - pvdAmt`
+- `takeHome = gross - pvdAmt - ssoAmt - deductTotal`
+- `ssoAmt = Math.min(Math.round(gross * 0.05), 750)` — SSO is 5% of gross, capped at 750
+- `deductTotal = getTotalDeductions()` — sum of custom pre-take-home deductions (e.g. ESPP, tax, loan)
 - `living = (weekly * 52) / 12 + commute` — weekly uses 52/12 weeks, NOT ×4
 - `buffer = takeHome - living - family - fixedTotal - personal - dca` — auto-calculated, slider is disabled
-- **All `%` pills (sliders, fixed costs, recommendation tab breakdown) are relative to `takeHome`, not `gross`**
+- `savingsRate = (pvdAmt + dca + Math.max(0, buffer)) / gross` — relative to **gross**, and PVD counts as savings (it's retirement saving)
+- **Most `%` pills (expense sliders, fixed costs, recommendation tab spending breakdown) are relative to `takeHome`.** Exceptions: **PVD, SSO, and custom deductions** are relative to `gross` (they are salary deductions taken before take-home).
 
 ## Bilingual pattern
 
@@ -46,9 +49,20 @@ Every user-visible string uses `data-en="…" data-th="…"` attributes on the e
 
 `fixedCosts` array holds `{ name, name_th, amount }`. Items store both language names. `renderCostList()` rebuilds the DOM. `getTotalFixed()` sums amounts.
 
+## Custom deductions
+
+Pre-take-home salary deductions (e.g. ESPP, tax, loan), added in the Salary Setup card. Mirrors the fixed-costs pattern.
+
+- `customDeductions` array holds `{ name, name_th, amount }` (empty by default, no seed row)
+- `renderDeductList()` rebuilds the `#deductList` DOM; `getTotalDeductions()` sums amounts
+- `addDeductRow()` / `removeDeduct(i)` / `updateDeductName(i, value)` mirror the cost-row functions
+- Subtracted from gross **before** take-home (`takeHome = gross - pvdAmt - ssoAmt - deductTotal`), so they cascade to every take-home-relative pill, the doughnut chart, and the recommendation tab automatically — they are NOT a separate doughnut segment
+- Their own `%` pills are relative to **gross** (like PVD/SSO), not take-home
+- Recommendation tab renders deduction rows into `#rb-deduct-rows`
+
 ## Export / import
 
-- `exportJSON()` / `importJSON()` — serialises all slider values + `fixedCosts` + `lang`; import requires `version: 1` field
+- `exportJSON()` / `importJSON()` — serialises all slider values + `fixedCosts` + `customDeductions` + `lang`; import requires `version: 1` field (older files without `customDeductions` load as empty)
 - `exportPNG()` — captures active `.tab-panel` via `html2canvas` at scale 2
 - `exportPDF()` — makes all tab panels visible, calls `window.print()`, restores state in `onafterprint`
 

@@ -9,7 +9,8 @@ A personal finance planning tool for Thai salary earners. Plan your DCA investme
 ## Features
 
 ### Interactive Planner
-- **Salary setup** — enter gross salary and PVD contribution % (2–15%), take-home calculated automatically
+- **Salary setup** — enter gross salary and PVD contribution % (2–15%), with auto-calculated SSO (5%, capped at 750); take-home calculated automatically
+- **Custom deductions** — add/remove pre-take-home salary deductions (e.g. ESPP, tax, loan) with bilingual names; each shows % of gross salary
 - **6 adjustable sliders** — weekly living budget, commute, family obligations, personal money, DCA amount, and auto-calculated buffer
 - **Custom fixed costs** — add/remove recurring expenses (e.g. dentist, gym, insurance) with bilingual names; each item shows % of gross salary
 - **Percentage pills** — every line item shows its % of gross salary, color-coded by category
@@ -20,7 +21,7 @@ A personal finance planning tool for Thai salary earners. Plan your DCA investme
 - **3 key numbers** — DCA, personal money, and buffer displayed prominently with health assessment
 - **Full monthly breakdown** — step-by-step ledger from gross salary to remaining buffer, each line with % pill
 - **Stacked allocation bar** — visual proportion of every spending category
-- **Why these numbers** — shows DCA %, personal %, and savings rate against take-home
+- **Why these numbers** — shows DCA %, personal %, and savings rate (PVD + DCA + buffer relative to gross salary)
 - **DCA guide** — 4 tiers (Too Low / Balanced / Aggressive / Too Much) with "YOU ARE HERE" indicator, live example amounts, and 10-year portfolio estimates based on your actual salary
 - **Key milestones** — projected portfolio at year 1, 3, 5, and 10 based on your DCA amount
 - **5 rules** — personalized with your live numbers
@@ -37,7 +38,7 @@ A personal finance planning tool for Thai salary earners. Plan your DCA investme
 |---|---|---|
 | PNG | `.png` | Screenshots the active tab at 2× resolution |
 | PDF | Browser print | All panels rendered, print-optimized CSS |
-| Export | `.json` | Saves all slider values, custom costs, and language |
+| Export | `.json` | Saves all slider values, custom costs, custom deductions, and language |
 | Import | `.json` | Restores all settings including language |
 
 ### Languages
@@ -128,7 +129,7 @@ Go to [vercel.com/new](https://vercel.com/new) and drag the `finance-planner` fo
 ```
 finance-planner/
 ├── index.html   — full app (planner + recommendation + export)
-├── bugs.html    — bug audit report (Thai)
+├── AGENTS.md    — architecture notes for AI agents
 └── README.md    — this file
 ```
 

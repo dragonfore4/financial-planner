@@ -855,6 +855,23 @@
         color: #fb923c;
         font-weight: 700;
       }
+      /* ── Custom deductions (red accent) ── */
+      .deduct-list {
+        margin-top: 0.6rem;
+      }
+      .deduct-list .cost-row input[type="number"] {
+        color: #f87171;
+      }
+      .deduct-list .cost-row input[type="number"]:focus {
+        border-color: #f87171;
+      }
+      .deduct-list .cost-row .cost-pct {
+        color: #f87171;
+      }
+      .deduct-add-btn:hover {
+        border-color: #f87171;
+        color: #f87171;
+      }
 
       /* ── Toast ── */
       #toast {
@@ -1145,6 +1162,14 @@
             <span class="label" data-en="SSO (5%, cap 750)" data-th="ประกันสังคม (5%, สูงสุด 750)">SSO (5%, cap 750)</span>
             <span class="value negative" id="ssoDeductDisplay">-750 THB</span>
           </div>
+          <div class="cost-list deduct-list" id="deductList"></div>
+          <button class="add-cost-btn deduct-add-btn" onclick="addDeductRow()">
+            <span style="font-size: 1.1rem; line-height: 1">+</span>
+            <span data-en="Add deduction" data-th="เพิ่มรายการหัก"
+              >Add deduction</span
+            >
+          </button>
+          <hr class="divider" />
           <div class="breakdown-row">
             <span
               class="label"
@@ -1628,6 +1653,7 @@
                 >-750 THB</span
               >
             </div>
+            <div id="rb-deduct-rows"></div>
             <div class="phase-item" style="border: 1px solid #60a5fa">
               <span
                 class="item-label"
@@ -1797,9 +1823,9 @@
             <div class="phase-item">
               <span
                 class="item-label"
-                data-en="Savings rate (DCA + buffer)"
-                data-th="อัตราออม (DCA + สำรอง)"
-                >Savings rate (DCA + buffer)</span
+                data-en="Savings rate (PVD + DCA + buffer)"
+                data-th="อัตราออม (PVD + DCA + สำรอง)"
+                >Savings rate (PVD + DCA + buffer)</span
               >
               <span class="item-value" style="color: #f472b6" id="why-saverate"
                 >48% of surplus</span
@@ -2362,6 +2388,7 @@
         // BUG-10b fix: rebuild proj chart in new language if it exists
         if (projChartInstance) refreshProjChart(state.dca);
         renderCostList();
+        renderDeductList();
         updatePlanner();
       }
 
@@ -2459,6 +2486,66 @@
       }
 
       // ══════════════════════════════════
+      // CUSTOM DEDUCTIONS (pre-take-home)
+      // ══════════════════════════════════
+      let customDeductions = [];
+
+      function getTotalDeductions() {
+        return customDeductions.reduce((s, c) => s + (c.amount || 0), 0);
+      }
+
+      function renderDeductList() {
+        const gross = Math.max(
+          10000,
+          +document.getElementById("grossInput").value || 0,
+        );
+        const list = document.getElementById("deductList");
+        list.innerHTML = customDeductions
+          .map(
+            (c, i) => `
+    <div class="cost-row" data-i="${i}">
+      <input type="text" value="${currentLang === "th" ? c.name_th || c.name : c.name}"
+        placeholder="${currentLang === "th" ? "ชื่อรายการหัก" : "Deduction name"}"
+        onchange="updateDeductName(${i}, this.value)">
+      <input type="number" value="${c.amount}" min="0" step="100"
+        onchange="customDeductions[${i}].amount=+this.value||0; updatePlanner()">
+       <span class="cost-pct">${pctOf(c.amount, gross)}%</span>
+      <button class="del-btn" onclick="removeDeduct(${i})" title="Remove">✕</button>
+    </div>`,
+          )
+          .join("");
+      }
+
+      function addDeductRow() {
+        customDeductions.push({ name: "", name_th: "", amount: 0 });
+        renderDeductList();
+        updatePlanner();
+        // focus new name input
+        const rows = document
+          .getElementById("deductList")
+          .querySelectorAll(".cost-row");
+        if (rows.length)
+          rows[rows.length - 1].querySelector("input[type=text]").focus();
+      }
+
+      function removeDeduct(i) {
+        customDeductions.splice(i, 1);
+        renderDeductList();
+        updatePlanner();
+      }
+
+      function updateDeductName(i, value) {
+        if (currentLang === "th") {
+          customDeductions[i].name_th = value;
+          if (!customDeductions[i].name) customDeductions[i].name = value; // fallback for EN
+        } else {
+          customDeductions[i].name = value;
+          if (!customDeductions[i].name_th) customDeductions[i].name_th = value; // fallback for TH
+        }
+        updatePlanner();
+      }
+
+      // ══════════════════════════════════
       // SHARED STATE
       // ══════════════════════════════════
       let state = {};
@@ -2545,7 +2632,8 @@
         const pvdPct = +pvdPctSlider.value;
         const pvdAmt = (gross * pvdPct) / 100;
         const ssoAmt = Math.min(Math.round(gross * 0.05), 750);
-        const takeHome = gross - pvdAmt - ssoAmt;
+        const deductTotal = getTotalDeductions();
+        const takeHome = gross - pvdAmt - ssoAmt - deductTotal;
         const weekly = +S.weekly.value;
         const commute = +S.commute.value;
         const family = +S.family.value;
@@ -2560,6 +2648,7 @@
           pvdPct,
           pvdAmt,
           ssoAmt,
+          deductTotal,
           takeHome,
           weekly,
           commute,
@@ -2647,6 +2736,7 @@
 
         // Cost list percentages
         renderCostList();
+        renderDeductList();
 
         // Alloc cards
         document.getElementById("pvdAllocDisplay").textContent = fmt(pvdAmt);
@@ -2702,6 +2792,7 @@
 
       // init
       renderCostList();
+      renderDeductList();
       updatePlanner();
 
       // ══════════════════════════════════
@@ -2735,10 +2826,12 @@
         const dcaPct = pctOf(dca, takeHome);
         const personalPct = pctOf(personal, takeHome);
         const savingsRate =
-          takeHome > 0
+          gross > 0
             ? Math.min(
                 100,
-                Math.round(((dca + Math.max(0, buffer)) / takeHome) * 100),
+                Math.round(
+                  ((pvdAmt + dca + Math.max(0, buffer)) / gross) * 100,
+                ),
               )
             : 0;
         const monthlyLiving = (weekly * 52) / 12;
@@ -2789,6 +2882,14 @@
           `PVD (${pvdPct}%)`;
         document.getElementById("rb-pvd").textContent = "-" + thb(pvdAmt);
         document.getElementById("rb-sso").textContent = "-" + thb(ssoAmt);
+        const deductRows = customDeductions
+          .map((c) => {
+            const name =
+              currentLang === "th" ? c.name_th || c.name : c.name || c.name_th;
+            return `<div class="phase-item"><span class="item-label" style="color:#f87171;">— ${name || "—"}</span><span class="item-value" style="color:#f87171;">-${thb(c.amount)} <span class="pct-pill" style="background:#f8717122;color:#f87171;">${pctOf(c.amount, gross)}%</span></span></div>`;
+          })
+          .join("");
+        document.getElementById("rb-deduct-rows").innerHTML = deductRows;
         document.getElementById("rb-takehome").textContent = thb(takeHome);
         document.getElementById("rb-living-label").textContent =
           currentLang === "th"
@@ -2910,7 +3011,7 @@
           personalPct + "%";
         document.getElementById("why-saverate").textContent =
           savingsRate +
-          (currentLang === "th" ? "% ของเงินเดือนสุทธิ" : "% of take-home");
+          (currentLang === "th" ? "% ของเงินเดือนรวม" : "% of gross");
         document.getElementById("why-note").textContent =
           currentLang === "th"
             ? `เป้าหมาย "สมดุล": ~25% ของเงินเดือนสุทธิไป DCA, ~20% เป็นเงินส่วนตัว, ส่วนที่เหลือสะสมเป็นสำรอง`
@@ -3202,6 +3303,11 @@
             name_th: c.name_th || "",
             amount: c.amount,
           })),
+          customDeductions: customDeductions.map((c) => ({
+            name: c.name,
+            name_th: c.name_th || "",
+            amount: c.amount,
+          })),
           lang: currentLang,
         };
         const blob = new Blob([JSON.stringify(data, null, 2)], {
@@ -3243,8 +3349,14 @@
               name_th: c.name_th || "",
               amount: +c.amount || 0,
             }));
+            customDeductions = (data.customDeductions || []).map((c) => ({
+              name: c.name || "",
+              name_th: c.name_th || "",
+              amount: +c.amount || 0,
+            }));
 
             renderCostList();
+            renderDeductList();
             updatePlanner();
             // BUG-8 fix: restore saved language
             if (data.lang && data.lang !== currentLang) {
